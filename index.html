@@ -114,23 +114,102 @@ html, body {
 #collapse-overlay.show { display: flex; }
 #collapse-retry { padding: 12px 35px; border-radius: 50px; border: 1px solid var(--ink-black); background: var(--ink-black); color: var(--paper-white); cursor: pointer; }
 
-/* ── Phase 3: Archive ── */
+/* ── Phase 3: Archive (다른 돌탑 보러가기) ── */
 #phase3 {
-  position: fixed; inset: 0; z-index: 3000; background: var(--paper-white);
-  display: none; flex-direction: column; overflow-y: auto; padding: 60px 20px;
+  position: fixed; inset: 0; z-index: 3000; 
+  background: var(--paper-white);
+  display: none; flex-direction: column; 
+  overflow-y: auto; padding: 60px 20px;
+  -webkit-overflow-scrolling: touch;
 }
+
 #phase3.active { display: flex; }
+
 .archive-header { text-align: center; margin-bottom: 50px; }
-#archive-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 60px 20px; max-width: 900px; margin: 0 auto; padding-bottom: 120px; }
-.archive-item { display: flex; flex-direction: column; align-items: center; animation: msgIn 1s ease-out both; }
-.arch-text-box { background: var(--bubble-fill); border: 1.5px solid var(--bubble-stroke); border-radius: 12px; padding: 10px; font-size: 11px; text-align: center; width: 130px; min-height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); word-break: break-all; }
-.arch-dot { background: var(--bubble-fill); border: 1px solid var(--bubble-stroke); border-radius: 50%; }
 
+#archive-container {
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+  gap: 60px 20px; 
+  max-width: 900px; 
+  margin: 0 auto; 
+  padding-bottom: 120px;
+}
+
+/* 돌과 말풍선 세트 한 줄씩 등장하는 효과 */
+.archive-item { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  animation: archiveEntrance 0.8s ease-out both; 
+}
+
+/* 말풍선 전체(글박스+꼬리)가 둥실둥실 움직이는 컨테이너 */
+.arch-bubble-wrap {
+  position: relative; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  margin-bottom: 15px; 
+  width: 100%;
+  /* 3초 동안 부드럽게 위아래로 무한 반복 */
+  animation: bubbleBobbing 3s ease-in-out infinite;
+}
+
+.arch-text-box { 
+  background: var(--bubble-fill); 
+  border: 1.5px solid var(--bubble-stroke); 
+  border-radius: 100px; 
+  padding: 10px 20px; 
+  font-size: 11px; 
+  text-align: center; 
+  width: 130px; 
+  min-height: 45px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+  word-break: break-all; 
+  z-index: 2;
+}
+
+/* 말풍선 꼬리 동그라미 공통 */
+.arch-dot { 
+  background: var(--bubble-fill); 
+  border: 1px solid var(--bubble-stroke); 
+  border-radius: 50%; 
+}
+
+/* ── 애니메이션 (Keyframes) 정리 ── */
+
+/* 아카이브 진입 시 슥 올라오는 효과 */
+@keyframes archiveEntrance {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 아카이브 말풍선 둥실둥실 (Infinite) */
+@keyframes bubbleBobbing {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 페이즈 2 게임 중 부유하는 말풍선 (사라지는 용) */
+@keyframes floatUp { 
+  0% { opacity: 0; transform: translateY(0) scale(0.9); } 
+  15% { opacity: 1; transform: translateY(-20px) scale(1); } 
+  85% { opacity: 1; } 
+  100% { opacity: 0; transform: translateY(-160px) scale(1); } 
+}
+
+/* 성공 시 메시지 등장용 */
+@keyframes msgIn { 
+  0% { opacity: 0; transform: scale(0.85); } 
+  100% { opacity: 1; transform: scale(1); } 
+}
+
+/* 기타 요소 */
 .float-bubble { position: fixed; z-index: 100; pointer-events: none; background: var(--bubble-fill); border: 1.5px solid var(--bubble-stroke); border-radius: 12px; padding: 7px 14px; font-size: 12px; color: #443300; box-shadow: 0 4px 12px rgba(255, 201, 0, 0.2); animation: floatUp 4.5s ease-out forwards; white-space: nowrap; }
-
-@keyframes floatUp { 0% { opacity: 0; transform: translateY(0) scale(0.9); } 15% { opacity: 1; transform: translateY(-20px) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(-160px) scale(1); } }
-@keyframes msgIn { 0% { opacity: 0; transform: scale(0.85); } 100% { opacity: 1; transform: scale(1); } }
-
 #ghost-stone { position: fixed; pointer-events: none; z-index: 50; transform: translate(-50%, -50%); display: none; }
 </style>
 </head>
@@ -394,19 +473,43 @@ async function saveWishToCloudflare(text) {
 }
 
 async function goToPhase3() {
-  const p3 = document.getElementById('phase3'); p3.classList.add('active');
+  const p3 = document.getElementById('phase3'); 
+  if (!p3) return;
+  p3.classList.add('active');
+  
   const container = document.getElementById('archive-container');
   container.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>소원을 불러오는 중...</p>";
+
   try {
-    const res = await fetch('/api/wishes'); const data = await res.json(); container.innerHTML = "";
+    const res = await fetch('/api/wishes'); 
+    const data = await res.json(); 
+    container.innerHTML = "";
+
     if (data && data.length > 0) {
       data.forEach(item => {
-        const itemDiv = document.createElement('div'); itemDiv.className = 'archive-item';
-        itemDiv.innerHTML = `<div class="arch-bubble-wrap"><div class="arch-text-box">${item.text}</div><div class="arch-dot" style="width:10px; height:10px; margin-left:15px;"></div><div class="arch-dot" style="width:6px; height:6px; margin-left:5px;"></div></div><img src="stone${item.stoneIdx}.png" style="width:80px; height:auto; filter:grayscale(0.3);">`;
+        const itemDiv = document.createElement('div'); 
+        itemDiv.className = 'archive-item';
+        
+        // [수정] 모든 말풍선이 제각각 움직이도록 -3초 ~ 0초 사이의 랜덤 시작 시간 부여
+        const randomDelay = (Math.random() * -3).toFixed(2);
+
+        itemDiv.innerHTML = `
+          <div class="arch-bubble-wrap" style="animation-delay: ${randomDelay}s">
+            <div class="arch-text-box">${item.text}</div>
+            <!-- [수정] 꼬리 동그라미 위치를 오른쪽으로 밀어남 (margin-left 수치 조정) -->
+            <div class="arch-dot" style="width:10px; height:10px; margin-top:-5px; margin-left:55px;"></div>
+            <div class="arch-dot" style="width:6px; height:6px; margin-top:3px; margin-left:85px;"></div>
+          </div>
+          <img src="stone${item.stoneIdx}.png" style="width:80px; height:auto; filter:grayscale(0.3);">
+        `;
         container.appendChild(itemDiv);
       });
-    } else { container.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>아직 쌓인 소원이 없습니다.</p>"; }
-  } catch (e) { container.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>불러오기에 실패했습니다.</p>"; }
+    } else { 
+      container.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>아직 쌓인 소원이 없습니다.</p>"; 
+    }
+  } catch (e) { 
+    container.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>불러오기에 실패했습니다.</p>"; 
+  }
 }
 </script>
 </body>
