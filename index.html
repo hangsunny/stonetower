@@ -239,11 +239,13 @@ html, body {
     </div>
     <div id="p1-stone"><img src="stone20.png" alt="소원돌"></div>
   </div>
-  <div class="phase-caption">돌에 소원을 담으세요</div>
+  <div class="phase-caption">돌에 소원을 담으세요 </div>
 </div>
 
 <!-- PHASE 2 -->
-<div id="phase2"><canvas id="matter-canvas"></canvas></div>
+<div id="phase2"><canvas id="matter-canvas"></canvas>
+<div class="phase-caption" id="p2-caption">클릭해서 돌탑을 쌓으세요.</div>
+</div>
 
 <!-- SUCCESS OVERLAY (정리됨) -->
 <div id="success-overlay">
@@ -411,6 +413,8 @@ function initPhase2() {
 
 function triggerCollapse() {
   if (!phase2Active) return; phase2Active = false; sfxFalling.play();
+  const p2Cap = document.getElementById('p2-caption');
+  if (p2Cap) p2Cap.style.display = 'none';
   document.getElementById('ghost-stone').style.display = 'none';
   document.querySelectorAll('.float-bubble').forEach(el => el.remove());
   document.getElementById('collapse-overlay').classList.add('show');
@@ -424,6 +428,10 @@ function triggerSuccess() {
   const msg = document.getElementById('success-msg');
   const archiveBtn = document.getElementById('view-archive-btn');
   const ctx = canvas.getContext('2d');
+  const p2Cap = document.getElementById('p2-caption');
+  if (p2Cap) p2Cap.style.display = 'none';
+
+  const overlay = document.getElementById('success-overlay');
   
   document.getElementById('return-btn').classList.add('inverted');
   document.getElementById('bgm-btn').classList.add('inverted');
